@@ -1,0 +1,9 @@
+# LumoroX Park
+
+> LumoroX Park is a marketplace for renting private driveways and parking spots by the hour, with QR check-in, live availability, and host trust scores.
+
+## Pages
+
+- [Home](/): What LumoroX Park is and how it works.
+- [Browse parking](/browse): Search live private parking spots near you.
+- [Sign in / Sign up](/auth): Create an account or sign in as a renter or host.
