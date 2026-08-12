@@ -3,7 +3,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 const PROVIDER = process.env.AI_PROVIDER || "gemini";
 const API_KEY = process.env.AI_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
-const GEMINI_MODEL = process.env.AI_GEMINI_MODEL || "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.AI_GEMINI_MODEL || "gemini-1.5-flash";
 const OPENAI_MODEL = process.env.AI_OPENAI_MODEL || "gpt-4o-mini";
 
 export function isAiConfigured(): boolean {

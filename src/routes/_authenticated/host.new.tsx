@@ -213,7 +213,7 @@ function NewSpacePage() {
     const priceD = pricePerDay ? parseFloat(pricePerDay) : null;
 
     let finalDesc = description.trim();
-    finalDesc += `\n\n[VERIFICATION_INFO]\nGov ID Type: ${govIdType}\nGov ID Num: ${govIdNum.slice(-4).padStart(govIdNum.length, "*")}\nGov ID Doc Path: ${govIdPhoto}\nProperty Doc Path: ${propertyDoc}\nCertified Owned: Yes\nLegally Liable: Yes`;
+    finalDesc += `\n\n[VERIFICATION_INFO]\nGov ID Type: ${govIdType}\nGov ID Num: ${govIdNum.slice(-4).padStart(govIdNum.length, "*")}\nGov ID Doc Path: ${govIdPhoto}\nProperty Doc Path: ${propertyDoc}\nCertified Owned: Yes\nLegally Liable: Yes\n[APPROVAL_STATUS] Pending`;
 
     setSaving(true);
     try {

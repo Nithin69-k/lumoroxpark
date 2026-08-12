@@ -31,6 +31,8 @@ function AuthPage() {
   const [attempt, setAttempt] = useState(0);
   const [lastError, setLastError] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpToken, setOtpToken] = useState("");
 
   // Only same-origin relative paths are allowed as `next` targets.
   const safeNext =
@@ -112,21 +114,35 @@ function AuthPage() {
     setLastError(null);
     try {
       if (mode === "signup") {
-        await withRetry(async () => {
-          const { error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-              emailRedirectTo: safeNext
-                ? window.location.origin + safeNext
-                : window.location.origin,
-              data: { full_name: fullName },
-            },
+        if (!showOtp) {
+          await withRetry(async () => {
+            const { error } = await supabase.auth.signInWithOtp({
+              email,
+              options: {
+                emailRedirectTo: safeNext
+                  ? window.location.origin + safeNext
+                  : window.location.origin,
+                shouldCreateUser: true,
+                data: { full_name: fullName },
+              },
+            });
+            if (error) throw error;
           });
-          if (error) throw error;
-        });
-        toast.success("Account created — you're in!");
-        navigate({ to: safeNext ?? "/onboarding", replace: true });
+          setShowOtp(true);
+          toast.success("Verification OTP code sent to your email!");
+        } else {
+          await withRetry(async () => {
+            const { data, error } = await supabase.auth.verifyOtp({
+              email,
+              token: otpToken.trim(),
+              type: "email",
+            });
+            if (error) throw error;
+            if (!data.session) throw new Error("Could not verify OTP. Please try again.");
+          });
+          toast.success("Email verified. Account created successfully!");
+          navigate({ to: safeNext ?? "/onboarding", replace: true });
+        }
       } else {
         await withRetry(async () => {
           const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -213,7 +229,7 @@ function AuthPage() {
             onSubmit={handleEmail}
             className={mode === "forgot" ? "mt-6 space-y-3" : "space-y-3"}
           >
-            {mode === "signup" && (
+            {mode === "signup" && !showOtp && (
               <div>
                 <Label htmlFor="name">Full name</Label>
                 <Input
@@ -225,18 +241,20 @@ function AuthPage() {
                 />
               </div>
             )}
-            <div>
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                autoComplete="email"
-                required
-              />
-            </div>
-            {mode !== "forgot" && (
+            {!showOtp && (
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            )}
+            {mode !== "forgot" && !showOtp && (
               <div>
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
@@ -266,6 +284,26 @@ function AuthPage() {
               </div>
             )}
 
+            {showOtp && (
+              <div className="space-y-3 text-left">
+                <div>
+                  <Label htmlFor="otp">Enter OTP Code</Label>
+                  <p className="text-xs text-muted-foreground mt-1 mb-2.5">
+                    We sent a verification code to <span className="font-semibold text-foreground">{email}</span>.
+                  </p>
+                  <Input
+                    id="otp"
+                    value={otpToken}
+                    onChange={(e) => setOtpToken(e.target.value)}
+                    placeholder="••••••"
+                    className="text-center font-mono tracking-[0.25em] text-lg font-bold rounded-xl"
+                    maxLength={10}
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             {resetSent && mode === "forgot" && (
               <p className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
                 Link sent to <span className="font-medium text-foreground">{email}</span>. It
@@ -291,12 +329,27 @@ function AuthPage() {
                 ? attempt > 1
                   ? `Retrying (${attempt}/3)…`
                   : "Please wait…"
-                : mode === "signup"
-                  ? "Create account"
-                  : mode === "forgot"
-                    ? "Send reset link"
-                    : "Sign in"}
+                : showOtp
+                  ? "Verify OTP"
+                  : mode === "signup"
+                    ? "Verify Email via OTP"
+                    : mode === "forgot"
+                      ? "Send reset link"
+                      : "Sign in"}
             </Button>
+            
+            {showOtp && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOtp(false);
+                  setOtpToken("");
+                }}
+                className="w-full text-center text-xs font-semibold text-primary hover:underline mt-2 block"
+              >
+                Change Email / Start Over
+              </button>
+            )}
           </form>
 
           <p className="mt-5 text-center text-sm text-muted-foreground">

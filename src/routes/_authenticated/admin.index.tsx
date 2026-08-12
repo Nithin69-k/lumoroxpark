@@ -1,4 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+import { SpacePhoto } from "@/components/SpacePhoto";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -98,6 +100,41 @@ function AdminDashboard() {
   const { data: disputes, isLoading } = useQuery({
     queryKey: ["admin-disputes"],
     queryFn: adminListDisputes,
+  });
+
+  const { data: pendingListings, isLoading: pendingLoading } = useQuery({
+    queryKey: ["admin-pending-listings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("admin_list_pending_spaces" as any);
+      if (error) throw error;
+      return data as Array<{
+        id: string;
+        title: string;
+        description: string;
+        address: string;
+        price_per_hour: number;
+        created_at: string;
+        host_id: string;
+        host_name: string;
+        host_email: string;
+      }>;
+    },
+  });
+
+  const approveListing = useMutation({
+    mutationFn: async ({ id, approve }: { id: string; approve: boolean }) => {
+      const { error } = await supabase.rpc("admin_approve_space" as any, {
+        p_space_id: id,
+        p_approve: approve,
+      } as any);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-pending-listings"] });
+      qc.invalidateQueries({ queryKey: ["admin-stats"] });
+      toast.success("Listing moderation completed");
+    },
+    onError: (e: Error) => toast.error(e.message),
   });
 
   const qc = useQueryClient();
@@ -284,6 +321,41 @@ function AdminDashboard() {
                   );
                 })}
               </ol>
+            )}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="mb-3 font-semibold flex items-center gap-2">
+            <ShieldCheck className="h-4.5 w-4.5 text-emerald-500" /> Host Listing Verification Requests
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-border bg-card">
+            {pendingLoading ? (
+              <div className="p-6 text-sm text-muted-foreground">Loading verification requests…</div>
+            ) : !pendingListings || pendingListings.length === 0 ? (
+              <div className="p-6 text-sm text-muted-foreground">No pending listing verifications. All clear!</div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Space / Location</TableHead>
+                    <TableHead>Host Contact</TableHead>
+                    <TableHead>Verification ID</TableHead>
+                    <TableHead>Documents</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {pendingListings.map((item) => (
+                    <PendingListingRow
+                      key={item.id}
+                      item={item}
+                      onResolve={(id, approve) => approveListing.mutate({ id, approve })}
+                      isMutating={approveListing.isPending}
+                    />
+                  ))}
+                </TableBody>
+              </Table>
             )}
           </div>
         </section>
@@ -631,4 +703,113 @@ function dotTone(s: DisputeStatus): string {
     default:
       return "bg-warning";
   }
+}
+
+function PendingListingRow({
+  item,
+  onResolve,
+  isMutating,
+}: {
+  item: {
+    id: string;
+    title: string;
+    description: string;
+    address: string;
+    price_per_hour: number;
+    created_at: string;
+    host_id: string;
+    host_name: string;
+    host_email: string;
+  };
+  onResolve: (id: string, approve: boolean) => void;
+  isMutating: boolean;
+}) {
+  const [showDocs, setShowDocs] = useState(false);
+  const idType = item.description.match(/Gov ID Type: (.*)/)?.[1] ?? "N/A";
+  const idNum = item.description.match(/Gov ID Num: (.*)/)?.[1] ?? "N/A";
+  const idPhoto = item.description.match(/Gov ID Doc Path: (.*)/)?.[1];
+  const propertyDoc = item.description.match(/Property Doc Path: (.*)/)?.[1];
+  const cleanDesc = item.description.split("[VERIFICATION_INFO]")[0].trim();
+
+  return (
+    <TableRow>
+      <TableCell className="font-semibold text-foreground text-left">
+        <div>{item.title}</div>
+        <div className="text-[11px] text-muted-foreground font-normal mt-0.5">{item.address}</div>
+      </TableCell>
+      <TableCell className="text-left text-xs">
+        <div>{item.host_name}</div>
+        <div className="text-[10px] text-muted-foreground">{item.host_email}</div>
+      </TableCell>
+      <TableCell className="text-left text-xs">
+        <div className="capitalize font-semibold text-foreground">{idType} ID</div>
+        <div className="font-mono text-[10px] text-muted-foreground mt-0.5">{idNum}</div>
+      </TableCell>
+      <TableCell className="text-left">
+        <Button size="sm" variant="outline" className="text-xs h-7 px-2.5 rounded-lg" onClick={() => setShowDocs(!showDocs)}>
+          View Documents ({[idPhoto, propertyDoc].filter(Boolean).length})
+        </Button>
+
+        {showDocs && (
+          <Dialog open={showDocs} onOpenChange={setShowDocs}>
+            <DialogContent className="max-w-2xl bg-card border border-border">
+              <DialogHeader>
+                <DialogTitle>Listing Verification Documents</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 sm:grid-cols-2 mt-4">
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-muted-foreground block text-left">Government ID Document:</span>
+                  <div className="aspect-video rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center">
+                    {idPhoto ? (
+                      <SpacePhoto path={idPhoto} alt="Gov ID" className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No Document Uploaded</span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-xs font-semibold text-muted-foreground block text-left">Property Ownership Deed / Bill:</span>
+                  <div className="aspect-video rounded-xl overflow-hidden bg-muted border border-border flex items-center justify-center">
+                    {propertyDoc ? (
+                      <SpacePhoto path={propertyDoc} alt="Property Doc" className="h-full w-full object-contain" />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">No Document Uploaded</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 mt-4 text-xs text-left leading-relaxed text-muted-foreground">
+                <span className="font-semibold text-foreground block mb-0.5">Listing Description:</span>
+                {cleanDesc || "No description provided."}
+              </div>
+              <DialogFooter className="mt-4">
+                <Button size="sm" variant="outline" className="rounded-xl" onClick={() => setShowDocs(false)}>Close Documents</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        )}
+      </TableCell>
+      <TableCell className="text-right">
+        <div className="flex justify-end gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            className="text-destructive hover:bg-destructive/10 hover:text-destructive h-7 w-7 p-0 rounded-lg flex items-center justify-center"
+            onClick={() => onResolve(item.id, false)}
+            disabled={isMutating}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 w-7 p-0 rounded-lg flex items-center justify-center"
+            onClick={() => onResolve(item.id, true)}
+            disabled={isMutating}
+          >
+            <Check className="h-4 w-4" />
+          </Button>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 }
