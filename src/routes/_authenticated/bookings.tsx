@@ -45,6 +45,7 @@ import { CancelBookingButton } from "@/components/CancelBookingButton";
 import { PolicyBadge } from "@/components/PolicyBadge";
 import { listMyBookings, type MyBooking } from "@/lib/search";
 import { checkoutBooking, submitReview, hasReviewedBooking } from "@/lib/lifecycle";
+import { AppMenu } from "@/components/AppMenu";
 import { Price } from "@/components/Price";
 import {
   raiseDispute,
@@ -118,9 +119,12 @@ function BookingsPage() {
             </Button>
             <h1 className="truncate font-display text-base font-bold sm:text-lg">My bookings</h1>
           </div>
-          <Button asChild size="sm" className="shrink-0">
-            <Link to="/browse">Find a spot</Link>
-          </Button>
+          <div className="flex shrink-0 items-center gap-1.5">
+            <Button asChild size="sm" className="shrink-0">
+              <Link to="/browse">Find a spot</Link>
+            </Button>
+            <AppMenu />
+          </div>
         </div>
       </header>
 

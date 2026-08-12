@@ -39,6 +39,7 @@ import {
 import { setLiveOccupancy } from "@/lib/lifecycle";
 import { SpacePhoto } from "@/components/SpacePhoto";
 import { fetchMyProfile } from "@/lib/profile";
+import { AppMenu } from "@/components/AppMenu";
 
 export const Route = createFileRoute("/_authenticated/host/")({
   component: HostDashboard,
@@ -96,7 +97,7 @@ function HostDashboard() {
             </Button>
             <h1 className="truncate font-display text-base font-bold sm:text-lg">Host dashboard</h1>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Button asChild size="sm" variant="outline">
               <Link to="/host/earnings">Earnings</Link>
             </Button>
@@ -109,9 +110,10 @@ function HostDashboard() {
             <Button asChild size="sm">
               <Link to="/host/new">
                 <Plus className="h-4 w-4 sm:mr-1" />{" "}
-                <span className="hidden sm:inline">List a space</span>
+                <span className="hidden sm:inline">Create spot</span>
               </Link>
             </Button>
+            <AppMenu />
           </div>
         </div>
       </header>

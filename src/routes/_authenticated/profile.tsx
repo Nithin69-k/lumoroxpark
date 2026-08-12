@@ -21,6 +21,7 @@ import { listMyBookings } from "@/lib/search";
 import { Price } from "@/components/Price";
 import { listMyReviews } from "@/lib/lifecycle";
 import { AccountSettings } from "@/components/AccountSettings";
+import { AppMenu } from "@/components/AppMenu";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -141,6 +142,7 @@ function ProfilePage() {
               <LogOut className="h-4 w-4 sm:mr-2" />{" "}
               <span className="hidden sm:inline">Sign out</span>
             </Button>
+            <AppMenu />
           </div>
         </div>
       </header>

@@ -17,6 +17,7 @@ import type { ComponentType } from "react";
 
 import { Button } from "@/components/ui/button";
 import { listMyActivity, humanAction, type ActivityRow } from "@/lib/admin";
+import { AppMenu } from "@/components/AppMenu";
 
 export const Route = createFileRoute("/_authenticated/activity")({
   component: ActivityFeed,
@@ -88,14 +89,17 @@ function ActivityFeed() {
   return (
     <div className="min-h-full bg-gradient-surface">
       <header className="border-b border-border/60 bg-background/60 backdrop-blur">
-        <div className="mx-auto flex max-w-3xl items-center gap-2 px-5 py-4">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/profile">
-              <ArrowLeft className="mr-1 h-4 w-4" />
-              Profile
-            </Link>
-          </Button>
-          <h1 className="font-display text-lg font-bold">Activity</h1>
+        <div className="mx-auto flex max-w-3xl items-center justify-between gap-2 px-5 py-4">
+          <div className="flex items-center gap-2">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/profile">
+                <ArrowLeft className="mr-1 h-4 w-4" />
+                Profile
+              </Link>
+            </Button>
+            <h1 className="font-display text-lg font-bold">Activity</h1>
+          </div>
+          <AppMenu />
         </div>
       </header>
 
