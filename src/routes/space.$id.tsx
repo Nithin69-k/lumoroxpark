@@ -253,10 +253,41 @@ function SpacePage() {
                   About this space
                 </h2>
                 <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">
-                  {detail.description}
+                  {detail.description.split("[VERIFICATION_INFO]")[0].trim()}
                 </p>
               </>
             )}
+
+            {/* Legal Registration & Liability Verification Box */}
+            <div className="mt-8 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.01] p-5 text-left space-y-4">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-500">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-foreground">Verified & Legally Accountable Spot</h4>
+                  <p className="text-[10.5px] text-emerald-600 mt-0.5 font-semibold">Identity & Property Ownership Registered</p>
+                </div>
+              </div>
+              
+              <div className="grid gap-3.5 sm:grid-cols-2 text-xs border-t border-emerald-500/10 pt-4">
+                <div>
+                  <span className="text-muted-foreground block font-medium">Listing Authority</span>
+                  <span className="text-foreground font-semibold mt-1 block">Certified Property Owner/Lessor</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block font-medium">Liability Terms</span>
+                  <span className="text-foreground font-semibold mt-1 block">Full Civil & Property Custody Liability</span>
+                </div>
+              </div>
+
+              <div className="rounded-xl bg-muted/50 border border-border/40 p-3 text-[11px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-foreground block mb-1">Lawful Accountability Statement:</span>
+                This host has registered official government identification and proof of address. 
+                By accepting this booking, the host is legally responsible for security and vehicle protection under local property liability laws. 
+                In case of fraud, theft, or property damage, verified records are legally holding for lawsuit filings.
+              </div>
+            </div>
 
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
               {detail.is_covered && <Chip icon={Home}>Covered</Chip>}

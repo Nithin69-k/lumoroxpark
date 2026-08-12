@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { lazy, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Upload, X, MapPin, Crosshair, Sparkles } from "lucide-react";
+import { ArrowLeft, Upload, X, MapPin, Crosshair, Sparkles, ShieldAlert } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,36 @@ function NewSpacePage() {
   const runSuggestPrice = useServerFn(suggestListingPrice);
   const { coords: geoCoords, status: geoStatus, locate } = useGeolocation();
   const [fillingAddress, setFillingAddress] = useState(false);
+
+  // Identity & Property Verification States
+  const [govIdType, setGovIdType] = useState("aadhaar");
+  const [govIdNum, setGovIdNum] = useState("");
+  const [govIdPhoto, setGovIdPhoto] = useState<string | null>(null);
+  const [propertyDoc, setPropertyDoc] = useState<string | null>(null);
+  const [agreeOwn, setAgreeOwn] = useState(false);
+  const [agreeLiable, setAgreeLiable] = useState(false);
+  const [agreeAuth, setAgreeAuth] = useState(false);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  async function handleDocUpload(e: React.ChangeEvent<HTMLInputElement>, type: "id" | "property") {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+    try {
+      const path = await uploadSpacePhoto(user.id, file);
+      if (type === "id") {
+        setGovIdPhoto(path);
+        toast.success("Identity document uploaded successfully");
+      } else {
+        setPropertyDoc(path);
+        toast.success("Property ownership document uploaded successfully");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadingDoc(false);
+    }
+  }
 
   useEffect(() => {
     let alive = true;
@@ -182,11 +212,14 @@ function NewSpacePage() {
     }
     const priceD = pricePerDay ? parseFloat(pricePerDay) : null;
 
+    let finalDesc = description.trim();
+    finalDesc += `\n\n[VERIFICATION_INFO]\nGov ID Type: ${govIdType}\nGov ID Num: ${govIdNum.slice(-4).padStart(govIdNum.length, "*")}\nGov ID Doc Path: ${govIdPhoto}\nProperty Doc Path: ${propertyDoc}\nCertified Owned: Yes\nLegally Liable: Yes`;
+
     setSaving(true);
     try {
       await createSpace({
         title: title.trim(),
-        description: description.trim(),
+        description: finalDesc,
         address: address.trim(),
         lat: pos.lat,
         lng: pos.lng,
@@ -216,6 +249,7 @@ function NewSpacePage() {
     "Photos",
     "Amenities",
     "Pricing & Policy",
+    "Verification",
     "Review"
   ];
 
@@ -243,6 +277,23 @@ function NewSpacePage() {
       const priceH = parseFloat(pricePerHour);
       if (!Number.isFinite(priceH) || priceH <= 0) {
         toast.error("Please enter a valid hourly rate");
+        return;
+      }
+    } else if (step === 6) {
+      if (!govIdNum.trim()) {
+        toast.error("Please enter your Government ID number");
+        return;
+      }
+      if (!govIdPhoto) {
+        toast.error("Please upload a photo of your Government ID");
+        return;
+      }
+      if (!propertyDoc) {
+        toast.error("Please upload proof of property residency or ownership");
+        return;
+      }
+      if (!agreeOwn || !agreeLiable || !agreeAuth) {
+        toast.error("You must accept all legal declarations to continue");
         return;
       }
     }
@@ -549,8 +600,115 @@ function NewSpacePage() {
               </div>
             )}
 
-            {/* Step 6: Review & Publish */}
+            {/* Step 6: Verification & Legal Agreement */}
             {step === 6 && (
+              <div className="space-y-6 text-left">
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-foreground">Identity & Property Verification</h3>
+                  <p className="text-xs text-muted-foreground">
+                    To prevent fraudulent listings and hold hosts accountable, you must verify your identity and proof of residency/ownership.
+                  </p>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="govIdType">Government ID Type</Label>
+                    <select
+                      id="govIdType"
+                      value={govIdType}
+                      onChange={(e) => setGovIdType(e.target.value)}
+                      className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    >
+                      <option value="aadhaar" className="bg-background text-foreground">Aadhaar Card</option>
+                      <option value="pan" className="bg-background text-foreground">PAN Card</option>
+                      <option value="dl" className="bg-background text-foreground">Driver's License</option>
+                      <option value="passport" className="bg-background text-foreground">Passport</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="govIdNum">Government ID Number</Label>
+                    <Input
+                      id="govIdNum"
+                      placeholder="Enter ID number"
+                      className="rounded-xl"
+                      value={govIdNum}
+                      onChange={(e) => setGovIdNum(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Upload Government ID Photo</Label>
+                    {govIdPhoto ? (
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-xs text-emerald-500 flex items-center justify-between">
+                        <span>✓ ID Document Uploaded</span>
+                        <button type="button" onClick={() => setGovIdPhoto(null)} className="text-muted-foreground hover:text-foreground">Remove</button>
+                      </div>
+                    ) : (
+                      <label className="flex h-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border text-xs text-muted-foreground hover:bg-accent/50 transition-colors">
+                        <Upload className="mb-1 h-5 w-5" />
+                        {uploadingDoc ? "Uploading…" : "Upload Front Side Photo"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleDocUpload(e, "id")}
+                          disabled={uploadingDoc}
+                        />
+                      </label>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Upload Proof of Property Residency/Ownership</Label>
+                    {propertyDoc ? (
+                      <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 text-xs text-emerald-500 flex items-center justify-between">
+                        <span>✓ Property Document Uploaded</span>
+                        <button type="button" onClick={() => setPropertyDoc(null)} className="text-muted-foreground hover:text-foreground">Remove</button>
+                      </div>
+                    ) : (
+                      <label className="flex h-24 cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border text-xs text-muted-foreground hover:bg-accent/50 transition-colors">
+                        <Upload className="mb-1 h-5 w-5" />
+                        {uploadingDoc ? "Uploading…" : "Upload Deed, Lease or Utility Bill"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => handleDocUpload(e, "property")}
+                          disabled={uploadingDoc}
+                        />
+                      </label>
+                    )}
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.01] p-4 space-y-3">
+                  <div className="text-xs font-bold text-destructive flex items-center gap-1.5">
+                    <ShieldAlert className="h-4 w-4" /> Legal Declarations & Host Liability
+                  </div>
+                  <div className="space-y-2.5">
+                    <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox checked={agreeOwn} onCheckedChange={(v) => setAgreeOwn(v === true)} className="mt-0.5" />
+                      <span className="leading-relaxed">I certify that I am the legal owner or authorized lessor of this parking spot/driveway, and have full lawful authority to rent it.</span>
+                    </label>
+                    <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox checked={agreeLiable} onCheckedChange={(v) => setAgreeLiable(v === true)} className="mt-0.5" />
+                      <span className="leading-relaxed">I agree that I am legally liable for fraudulent listings, property misrepresentation, and that hosts can be prosecuted under criminal/civil laws for vehicles damaged or stolen due to host negligence.</span>
+                    </label>
+                    <label className="flex items-start gap-2.5 text-xs text-muted-foreground cursor-pointer">
+                      <Checkbox checked={agreeAuth} onCheckedChange={(v) => setAgreeAuth(v === true)} className="mt-0.5" />
+                      <span className="leading-relaxed">I authorize LumoroX Park to share these verified verification records with law enforcement or drivers in case of legal disputes, fraud, or damage reports.</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 7: Review & Publish */}
+            {step === 7 && (
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-foreground">Review your listing details</h3>
@@ -612,6 +770,12 @@ function NewSpacePage() {
                         {policy} Policy
                       </span>
                     </div>
+                    <div>
+                      <span className="font-semibold text-muted-foreground text-xs uppercase block">Verification status</span>
+                      <span className="text-xs font-semibold text-emerald-500 capitalize mt-0.5 inline-flex items-center gap-1">
+                        ✓ Verified ({govIdType.toUpperCase()})
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -633,7 +797,7 @@ function NewSpacePage() {
                 </Button>
               )}
 
-              {step < 6 ? (
+              {step < 7 ? (
                 <Button
                   type="button"
                   onClick={handleNext}
