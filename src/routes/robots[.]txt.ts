@@ -7,7 +7,23 @@ export const Route = createFileRoute("/robots.txt")({
   server: {
     handlers: {
       GET: async () => {
-        const body = `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
+        const rules = [
+          "User-agent: *",
+          "Allow: /",
+          "Disallow: /auth",
+          "Disallow: /reset-password",
+          "Disallow: /onboarding",
+          "Disallow: /profile",
+          "Disallow: /activity",
+          "Disallow: /bookings",
+          "Disallow: /host",
+          "Disallow: /admin",
+          "Disallow: /messages",
+          "Disallow: /notifications",
+          "",
+          `Sitemap: ${SITE_URL}/sitemap.xml`,
+        ];
+        const body = rules.join("\n") + "\n";
         return new Response(body, {
           headers: {
             "content-type": "text/plain; charset=utf-8",

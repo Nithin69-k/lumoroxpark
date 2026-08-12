@@ -10,12 +10,12 @@ Vercel → **Add New → Project → Import Git Repository**.
 
 `vercel.json` in the repo already sets everything Vercel needs:
 
-| Setting          | Value              |
-| ---------------- | ------------------ |
-| Framework preset | Other (`null`)     |
-| Install command  | `npm install`      |
-| Build command    | `npm run build`    |
-| Output directory | `.vercel/output`   |
+| Setting          | Value                 |
+| ---------------- | --------------------- |
+| Framework preset | Other (`null`)        |
+| Install command  | `npm install`         |
+| Build command    | `npm run build`       |
+| Output directory | `.vercel/output`      |
 | Node version     | 22.x (from `engines`) |
 
 Do not override these in the dashboard.

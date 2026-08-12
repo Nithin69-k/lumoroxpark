@@ -21,12 +21,12 @@ LumoroX Park is a peer-to-peer parking marketplace. Renters find and book privat
 
 ## 🧭 Current App Structure
 
-| Page | Path | What it does |
-|---|---|---|
-| Home | `/` | Landing page — value prop, feature highlights, CTAs to browse or list |
-| Browse | `/browse` | Map-based search with filters and geolocation ("Locating…"); currently shows no live listings in most areas since the platform is pre-launch |
-| Sign up | `/auth?mode=signup` | Create account via Google OAuth or email/password |
-| Sign in | `/auth?mode=signin` | Existing user login |
+| Page    | Path                | What it does                                                                                                                                 |
+| ------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Home    | `/`                 | Landing page — value prop, feature highlights, CTAs to browse or list                                                                        |
+| Browse  | `/browse`           | Map-based search with filters and geolocation ("Locating…"); currently shows no live listings in most areas since the platform is pre-launch |
+| Sign up | `/auth?mode=signup` | Create account via Google OAuth or email/password                                                                                            |
+| Sign in | `/auth?mode=signin` | Existing user login                                                                                                                          |
 
 > The browse map is live and functional, but listing inventory is still empty in most areas — the app is in a pre-launch/early-access phase ("Live in your city soon").
 
@@ -57,6 +57,7 @@ LumoroX Park is a peer-to-peer parking marketplace. Renters find and book privat
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - npm or yarn
 
@@ -140,7 +141,7 @@ preset to `vercel`, so a Vercel build emits the Build Output API v3 bundle at
 3. **Deploy.** Client routes, SSR, and the `/api/public/*` server routes
    (Razorpay order creation + signature verification) all run as one serverless function.
 4. **After the first deploy**, add your Vercel domain to the backend Auth
-   *Site URL* / *Redirect URLs* list so Google OAuth and email links return correctly,
+   _Site URL_ / _Redirect URLs_ list so Google OAuth and email links return correctly,
    and point the Razorpay webhook at
    `https://<your-vercel-domain>/api/public/payments/webhook?env=live`
    (use `?env=sandbox` for the test destination).

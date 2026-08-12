@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { LegalPage, LegalSection, LegalList } from "@/components/LegalPage";
+import { absoluteUrl } from "@/lib/site";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -17,9 +18,11 @@ export const Route = createFileRoute("/privacy")({
         content:
           "Data we collect, payment processing by UPI, sharing with Hosts, retention and your rights.",
       },
+      { property: "og:url", content: absoluteUrl("/privacy") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/privacy") }],
   }),
   component: PrivacyPage,
 });

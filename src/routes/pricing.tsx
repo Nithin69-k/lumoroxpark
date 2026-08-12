@@ -17,6 +17,7 @@ import { UpiPaymentPanel } from "@/components/UpiPaymentPanel";
 import { Price } from "@/components/Price";
 import { useServerFn } from "@tanstack/react-start";
 import { activateUpiSubscription, changeSubscriptionPlan } from "@/utils/payments.functions";
+import { absoluteUrl } from "@/lib/site";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
@@ -32,9 +33,11 @@ export const Route = createFileRoute("/pricing")({
         property: "og:description",
         content: "Unlimited listings, featured placement and analytics for parking hosts.",
       },
+      { property: "og:url", content: absoluteUrl("/pricing") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/pricing") }],
   }),
   component: PricingPage,
 });

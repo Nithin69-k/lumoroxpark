@@ -22,6 +22,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { SUPPORT_EMAIL } from "@/lib/support";
+import { absoluteUrl } from "@/lib/site";
 
 export const Route = createFileRoute("/help")({
   head: () => ({
@@ -38,8 +39,85 @@ export const Route = createFileRoute("/help")({
         content:
           "Guides for drivers and hosts, FAQs on payments and refunds, plus how to contact support.",
       },
+      { property: "og:url", content: absoluteUrl("/help") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+    ],
+    links: [{ rel: "canonical", href: absoluteUrl("/help") }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "How do I cancel a booking and what will I get back?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Open the booking under My bookings and choose Cancel. The refund shown depends on the host's cancellation policy (flexible, moderate or strict) and how close you are to the start time. The exact amount is always displayed before you confirm.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "When does a refund reach my account?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Approved refunds are sent back to the original payment method. Banks typically take 5–10 business days to post them.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "The host's space was blocked, unsafe or not as described. What now?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Message the host first from the booking. If it is not resolved, raise a dispute from the same booking within 48 hours and include photos. Our team reviews it and can refund you and hold the host's payout.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How much does LUMORO X PARK charge?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Drivers pay the host's listed price plus a small reservation fee. Hosts pay a commission on each completed booking. Host Pro is an optional monthly subscription for unlimited listings and featured placement.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "When do hosts get paid?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Earnings move into your wallet after checkout and clear after a 24-hour hold. Once cleared you can request a payout to your bank account from Earnings & payouts.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "Do I need permission to list my driveway or parking bay?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Yes. You must have the legal right to sublet the space — check your lease, landlord rules, housing society bylaws or local regulations before listing.",
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How do I delete my account or my data?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: `Email ${SUPPORT_EMAIL} from your registered address and we will delete your account and personal data, keeping only records we are legally required to retain.`,
+              },
+            },
+            {
+              "@type": "Question",
+              name: "How do I report a suspicious listing or user?",
+              acceptedAnswer: {
+                "@type": "Answer",
+                text: "Use the support form and choose “Report a listing or user”. Include the listing link or booking reference. We review every report and can suspend accounts.",
+              },
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: HelpCenter,

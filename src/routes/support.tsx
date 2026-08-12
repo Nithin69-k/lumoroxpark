@@ -24,6 +24,7 @@ import {
   listMySupportTickets,
   submitSupportTicket,
 } from "@/lib/support";
+import { absoluteUrl } from "@/lib/site";
 
 type SupportSearch = { category?: string };
 
@@ -44,9 +45,11 @@ export const Route = createFileRoute("/support")({
         property: "og:description",
         content: "Send a support ticket, report a listing, or email the LUMORO X PARK team.",
       },
+      { property: "og:url", content: absoluteUrl("/support") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/support") }],
   }),
   component: SupportPage,
 });

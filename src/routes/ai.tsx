@@ -22,6 +22,7 @@ export const Route = createFileRoute("/ai")({
       { property: "og:url", content: absoluteUrl("/ai") },
       { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/ai") }],
   }),
   component: AiPage,
 });

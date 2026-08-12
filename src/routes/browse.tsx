@@ -21,6 +21,7 @@ import { searchSpaces, type SpaceResult } from "@/lib/search";
 import { MapFrame } from "@/components/MapFrame";
 import { Price, CurrencyToggle } from "@/components/Price";
 import { markPerf, startPerfTimer } from "@/lib/perf";
+import { absoluteUrl } from "@/lib/site";
 
 const BrowseMap = lazy(() =>
   import("@/components/BrowseMap").then((m) => ({ default: m.BrowseMap })),
@@ -45,7 +46,10 @@ export const Route = createFileRoute("/browse")({
         property: "og:description",
         content: "Find private driveways and parking spots by the hour with live availability.",
       },
+      { property: "og:url", content: absoluteUrl("/browse") },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/browse") }],
   }),
   component: BrowsePage,
 });

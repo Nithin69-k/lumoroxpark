@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { LegalPage, LegalSection, LegalList } from "@/components/LegalPage";
+import { absoluteUrl } from "@/lib/site";
 
 export const Route = createFileRoute("/refunds")({
   head: () => ({
@@ -17,9 +18,11 @@ export const Route = createFileRoute("/refunds")({
         content:
           "Flexible, Moderate and Strict cancellation tiers, no-show rules and driver-protection refunds.",
       },
+      { property: "og:url", content: absoluteUrl("/refunds") },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
+    links: [{ rel: "canonical", href: absoluteUrl("/refunds") }],
   }),
   component: RefundPolicyPage,
 });
