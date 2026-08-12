@@ -176,6 +176,9 @@ function AdminDashboard() {
             <Button asChild size="sm" variant="outline">
               <Link to="/admin/payouts">Payouts</Link>
             </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to={"/admin/host-verifications" as any}>Host Verifications</Link>
+            </Button>
 
             <Button size="sm" onClick={() => seed.mutate()} disabled={seed.isPending}>
               <Sparkles className="mr-1 h-4 w-4" />

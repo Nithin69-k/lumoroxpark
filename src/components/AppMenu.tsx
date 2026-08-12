@@ -36,6 +36,12 @@ export function AppMenu() {
       description: "Simple, transparent hosting and renting rates",
     },
     {
+      to: "/become-host",
+      label: "Become a Host",
+      icon: ShieldCheck,
+      description: "Verify your identity and start listing parking spots",
+    },
+    {
       to: "/help",
       label: "Help Center",
       icon: HelpCircle,

@@ -24,6 +24,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as AuthenticatedBecomeHostRouteImport } from './routes/_authenticated/become-host'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedForbiddenRouteImport } from './routes/_authenticated/forbidden'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -32,6 +33,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as GuidesRvParkingRouteImport } from './routes/guides.rv-parking'
 import { Route as SpaceIdRouteImport } from './routes/space.$id'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminHostVerificationsRouteImport } from './routes/_authenticated/admin.host-verifications'
 import { Route as AuthenticatedAdminPayoutsRouteImport } from './routes/_authenticated/admin.payouts'
 import { Route as AuthenticatedAdminSupportRouteImport } from './routes/_authenticated/admin.support'
 import { Route as AuthenticatedHostIndexRouteImport } from './routes/_authenticated/host.index'
@@ -115,6 +117,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBecomeHostRoute = AuthenticatedBecomeHostRouteImport.update({
+  id: '/become-host',
+  path: '/become-host',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -156,6 +163,12 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminHostVerificationsRoute =
+  AuthenticatedAdminHostVerificationsRouteImport.update({
+    id: '/admin/host-verifications',
+    path: '/admin/host-verifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminPayoutsRoute =
   AuthenticatedAdminPayoutsRouteImport.update({
     id: '/admin/payouts',
@@ -217,6 +230,7 @@ export interface FileRoutesByFullPath {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/become-host': typeof AuthenticatedBecomeHostRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/forbidden': typeof AuthenticatedForbiddenRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -224,6 +238,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/guides/rv-parking': typeof GuidesRvParkingRoute
   '/space/$id': typeof SpaceIdRoute
+  '/admin/host-verifications': typeof AuthenticatedAdminHostVerificationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -249,6 +264,7 @@ export interface FileRoutesByTo {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/become-host': typeof AuthenticatedBecomeHostRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/forbidden': typeof AuthenticatedForbiddenRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
@@ -256,6 +272,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/guides/rv-parking': typeof GuidesRvParkingRoute
   '/space/$id': typeof SpaceIdRoute
+  '/admin/host-verifications': typeof AuthenticatedAdminHostVerificationsRoute
   '/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/admin/support': typeof AuthenticatedAdminSupportRoute
   '/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -283,6 +300,7 @@ export interface FileRoutesById {
   '/support': typeof SupportRoute
   '/terms': typeof TermsRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/become-host': typeof AuthenticatedBecomeHostRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/forbidden': typeof AuthenticatedForbiddenRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
@@ -290,6 +308,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/guides/rv-parking': typeof GuidesRvParkingRoute
   '/space/$id': typeof SpaceIdRoute
+  '/_authenticated/admin/host-verifications': typeof AuthenticatedAdminHostVerificationsRoute
   '/_authenticated/admin/payouts': typeof AuthenticatedAdminPayoutsRoute
   '/_authenticated/admin/support': typeof AuthenticatedAdminSupportRoute
   '/_authenticated/host/earnings': typeof AuthenticatedHostEarningsRoute
@@ -317,6 +336,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/activity'
+    | '/become-host'
     | '/bookings'
     | '/forbidden'
     | '/notifications'
@@ -324,6 +344,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/guides/rv-parking'
     | '/space/$id'
+    | '/admin/host-verifications'
     | '/admin/payouts'
     | '/admin/support'
     | '/host/earnings'
@@ -349,6 +370,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/activity'
+    | '/become-host'
     | '/bookings'
     | '/forbidden'
     | '/notifications'
@@ -356,6 +378,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/guides/rv-parking'
     | '/space/$id'
+    | '/admin/host-verifications'
     | '/admin/payouts'
     | '/admin/support'
     | '/host/earnings'
@@ -382,6 +405,7 @@ export interface FileRouteTypes {
     | '/support'
     | '/terms'
     | '/_authenticated/activity'
+    | '/_authenticated/become-host'
     | '/_authenticated/bookings'
     | '/_authenticated/forbidden'
     | '/_authenticated/notifications'
@@ -389,6 +413,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/guides/rv-parking'
     | '/space/$id'
+    | '/_authenticated/admin/host-verifications'
     | '/_authenticated/admin/payouts'
     | '/_authenticated/admin/support'
     | '/_authenticated/host/earnings'
@@ -526,6 +551,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/become-host': {
+      id: '/_authenticated/become-host'
+      path: '/become-host'
+      fullPath: '/become-host'
+      preLoaderRoute: typeof AuthenticatedBecomeHostRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/bookings': {
       id: '/_authenticated/bookings'
       path: '/bookings'
@@ -580,6 +612,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/host-verifications': {
+      id: '/_authenticated/admin/host-verifications'
+      path: '/admin/host-verifications'
+      fullPath: '/admin/host-verifications'
+      preLoaderRoute: typeof AuthenticatedAdminHostVerificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin/payouts': {
@@ -643,11 +682,13 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedBecomeHostRoute: typeof AuthenticatedBecomeHostRoute
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedForbiddenRoute: typeof AuthenticatedForbiddenRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedAdminHostVerificationsRoute: typeof AuthenticatedAdminHostVerificationsRoute
   AuthenticatedAdminPayoutsRoute: typeof AuthenticatedAdminPayoutsRoute
   AuthenticatedAdminSupportRoute: typeof AuthenticatedAdminSupportRoute
   AuthenticatedHostEarningsRoute: typeof AuthenticatedHostEarningsRoute
@@ -661,11 +702,14 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedBecomeHostRoute: AuthenticatedBecomeHostRoute,
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedForbiddenRoute: AuthenticatedForbiddenRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedAdminHostVerificationsRoute:
+    AuthenticatedAdminHostVerificationsRoute,
   AuthenticatedAdminPayoutsRoute: AuthenticatedAdminPayoutsRoute,
   AuthenticatedAdminSupportRoute: AuthenticatedAdminSupportRoute,
   AuthenticatedHostEarningsRoute: AuthenticatedHostEarningsRoute,

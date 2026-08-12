@@ -3,7 +3,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
-import { Shield, Star, Pencil, LogOut, Car, Home, Bell, MessageSquare } from "lucide-react";
+import {
+  Bell,
+  MessageSquare,
+  LogOut,
+  Star,
+  Home,
+  Car,
+  Pencil,
+  Calendar,
+  Settings,
+  Clock,
+  ShieldAlert,
+  Shield,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { BrandLogo } from "@/components/BrandLogo";
@@ -22,6 +35,7 @@ import { Price } from "@/components/Price";
 import { listMyReviews } from "@/lib/lifecycle";
 import { AccountSettings } from "@/components/AccountSettings";
 import { AppMenu } from "@/components/AppMenu";
+import { fetchMyHostVerification } from "@/lib/host-verification";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   component: ProfilePage,
@@ -46,6 +60,11 @@ function ProfilePage() {
   const { data: admin } = useQuery({
     queryKey: ["is-admin", user.id],
     queryFn: () => isAdmin(user.id),
+  });
+
+  const { data: verification } = useQuery({
+    queryKey: ["host-verification", user.id],
+    queryFn: () => fetchMyHostVerification(user.id),
   });
 
   const { data: unread = 0 } = useQuery({
@@ -223,20 +242,49 @@ function ProfilePage() {
             </Button>
           </div>
           <div className="rounded-2xl border border-border p-5 text-sm">
-            <strong className="block text-foreground">Your listings</strong>
+            <strong className="block text-foreground text-left">Your listings</strong>
             {profile.is_host ? (
-              <div className="mt-2">
-                <p className="text-muted-foreground">
+              <div className="mt-2 text-left">
+                <p className="text-muted-foreground text-xs leading-relaxed">
                   Manage your parking spaces and availability.
                 </p>
                 <Button asChild size="sm" className="mt-3">
                   <Link to="/host">Open host dashboard</Link>
                 </Button>
               </div>
+            ) : verification?.status === "pending" ? (
+              <div className="mt-2 text-left space-y-2">
+                <p className="text-xs text-amber-500 font-semibold flex items-center gap-1.5">
+                  <Clock className="h-3.5 w-3.5" /> Verification Pending Approval
+                </p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Your application is under administrator review. We'll activate your dashboard once verified.
+                </p>
+                <Button asChild variant="outline" size="sm" className="mt-2">
+                  <Link to={"/become-host" as any}>Check Application Status</Link>
+                </Button>
+              </div>
+            ) : verification?.status === "rejected" ? (
+              <div className="mt-2 text-left space-y-2">
+                <p className="text-xs text-destructive font-semibold flex items-center gap-1.5">
+                  <ShieldAlert className="h-3.5 w-3.5" /> Application Not Approved
+                </p>
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Reason: {verification.rejection_reason || "Invalid documents."}
+                </p>
+                <Button asChild size="sm" className="mt-2 bg-destructive hover:bg-destructive/90 text-white border-0">
+                  <Link to={"/become-host" as any}>Resubmit Application</Link>
+                </Button>
+              </div>
             ) : (
-              <p className="mt-2 text-muted-foreground">
-                Flip the host toggle to start listing spaces.
-              </p>
+              <div className="mt-2 text-left">
+                <p className="text-muted-foreground text-xs leading-relaxed">
+                  Monetize your vacant driveway, garage or parking space. Verify your identity to start hosting.
+                </p>
+                <Button asChild size="sm" className="mt-3">
+                  <Link to={"/become-host" as any}>Become a Host</Link>
+                </Button>
+              </div>
             )}
           </div>
           <div className="rounded-2xl border border-border p-5 text-sm">
@@ -267,7 +315,6 @@ function EditForm({ profile, onClose }: { profile: Profile; onClose: () => void 
   const qc = useQueryClient();
   const [fullName, setFullName] = useState(profile.full_name ?? "");
   const [phone, setPhone] = useState(profile.phone ?? "");
-  const [isHost, setIsHost] = useState(profile.is_host);
   const [busy, setBusy] = useState(false);
 
   async function handleSave(e: React.FormEvent) {
@@ -277,7 +324,6 @@ function EditForm({ profile, onClose }: { profile: Profile; onClose: () => void 
       await updateMyProfile(profile.id, {
         full_name: fullName.trim() || null,
         phone: phone.trim() || null,
-        is_host: isHost,
       });
       qc.invalidateQueries({ queryKey: ["profile", profile.id] });
       toast.success("Profile updated");
@@ -298,15 +344,6 @@ function EditForm({ profile, onClose }: { profile: Profile; onClose: () => void 
       <div>
         <Label htmlFor="phone">Phone</Label>
         <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} />
-      </div>
-      <div className="flex items-center justify-between rounded-xl border border-border p-3">
-        <div>
-          <Label htmlFor="hostToggle" className="text-sm">
-            List my parking spaces
-          </Label>
-          <p className="text-xs text-muted-foreground">Enable host features.</p>
-        </div>
-        <Switch id="hostToggle" checked={isHost} onCheckedChange={setIsHost} />
       </div>
       <Button type="submit" disabled={busy}>
         {busy ? "Saving…" : "Save changes"}
