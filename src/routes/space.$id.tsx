@@ -356,9 +356,9 @@ function SpacePage() {
                 </div>
               </div>
 
-              <div className="mt-5 space-y-3">
+              <div className="mt-5 space-y-4">
                 <div>
-                  <Label htmlFor="s">Start</Label>
+                  <Label htmlFor="s" className="text-xs font-semibold">Start Time</Label>
                   <Input
                     id="s"
                     type="datetime-local"
@@ -367,13 +367,60 @@ function SpacePage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="e">End</Label>
+                  <Label htmlFor="e" className="text-xs font-semibold">End Time</Label>
                   <Input
                     id="e"
                     type="datetime-local"
                     value={end}
                     onChange={(e) => setEnd(e.target.value)}
                   />
+                </div>
+
+                {/* Quick Duration Selection */}
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground">Quick Durations</Label>
+                  <div className="mt-1 flex flex-wrap gap-1.5">
+                    {[1, 2, 3, 4, 6, 8, 12, 24].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          const sDate = new Date(start);
+                          const newEnd = new Date(sDate.getTime() + d * 60 * 60 * 1000);
+                          setEnd(toLocalInput(newEnd));
+                        }}
+                        className={`rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition-colors ${
+                          hours === d
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background hover:bg-accent"
+                        }`}
+                      >
+                        {d}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Visual Timeline Bar */}
+                <div>
+                  <Label className="text-xs font-semibold text-muted-foreground">Timeline Preview</Label>
+                  <div className="relative flex items-center justify-between rounded-xl border border-border bg-muted/40 p-2.5 text-[10px] font-semibold text-muted-foreground mt-1">
+                    <div className="absolute left-3 right-3 h-0.5 bg-border z-0" />
+                    {(() => {
+                      const sHour = new Date(start).getHours();
+                      const arr = [];
+                      for (let i = 0; i < 5; i++) {
+                        const h = (sHour + i) % 24;
+                        arr.push(`${String(h).padStart(2, "0")}:00`);
+                      }
+                      return arr;
+                    })().map((h, i) => (
+                      <div key={i} className="relative z-10 flex flex-col items-center">
+                        <div className={`h-1.5 w-1.5 rounded-full border border-background transition-colors ${i === 0 ? "bg-primary" : "bg-muted-foreground"}`} />
+                        <span className="mt-1 text-[9px] scale-90">{h}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 

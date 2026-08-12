@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { lazy, useCallback, useEffect, useState } from "react";
+import { lazy, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { z } from "zod";
 import {
@@ -66,6 +66,8 @@ function BrowsePage() {
   const [results, setResults] = useState<SpaceResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<string | null>(null);
+  const [selectedSpace, setSelectedSpace] = useState<SpaceResult | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
   const [mapKey, setMapKey] = useState(0);
@@ -141,10 +143,31 @@ function BrowsePage() {
     return () => clearTimeout(id);
   }, [center.lat, center.lng, radius, covered, gated, ev, maxPrice]);
 
+  const scoredResults = useMemo(() => {
+    return results
+      .map((r) => {
+        let score = 100;
+        score -= Math.max(0, r.price_per_hour - 5) * 6; // -6 pts per dollar above $5
+        score -= r.distance_km * 8; // -8 pts per km
+        if (r.live_occupancy_status === "occupied") {
+          score -= 25; // -25 pts if occupied
+        }
+        if (r.is_covered) score += 5;
+        if (r.is_gated) score += 5;
+        if (r.has_ev_charging) score += 5;
+        if (r.has_camera) score += 5;
+        return {
+          ...r,
+          score: Math.max(0, Math.min(100, Math.round(score))),
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [results]);
+
   return (
-    <div className="min-h-full bg-gradient-surface">
-      <header className="border-b border-border/60 bg-background/60 backdrop-blur">
-        <div className="mx-auto grid max-w-6xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-5 sm:py-4">
+    <div className="flex h-screen flex-col overflow-hidden bg-gradient-surface">
+      <header className="shrink-0 border-b border-border/60 bg-background/60 backdrop-blur z-30">
+        <div className="mx-auto grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-1 sm:gap-2">
             <Button asChild variant="ghost" size="sm" className="shrink-0 px-2 sm:px-3">
               <Link to="/">
@@ -167,7 +190,7 @@ function BrowsePage() {
           </div>
         </div>
         {showFilters && (
-          <div className="mx-auto max-w-6xl border-t border-border/60 px-4 py-4 sm:px-5">
+          <div className="mx-auto border-t border-border/60 px-4 py-4 sm:px-5 bg-background/95">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
               <FilterCheck label="Covered" checked={covered} onChange={setCovered} />
               <FilterCheck label="Gated" checked={gated} onChange={setGated} />
@@ -200,25 +223,46 @@ function BrowsePage() {
         )}
       </header>
 
-      <main className="mx-auto grid max-w-6xl gap-6 px-5 py-6 md:grid-cols-[1fr_1.1fr]">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2 text-sm text-muted-foreground">
-            <span className="truncate">
-              {locating
-                ? "Locating you…"
-                : loading
-                  ? "Searching…"
-                  : `${results.length} spots nearby`}
+      <main className="relative flex-1 w-full overflow-hidden md:grid md:grid-cols-[400px_1fr] lg:grid-cols-[450px_1fr]">
+        {/* Results drawer panel (Desktop: Left sidebar, Mobile: Bottom sheet) */}
+        <div
+          className={`
+            fixed bottom-0 left-0 right-0 z-40 bg-card border-t border-border shadow-[0_-8px_30px_rgb(0,0,0,0.12)] transition-all duration-300 flex flex-col rounded-t-[24px]
+            ${sheetOpen ? "h-[70vh]" : "h-16"}
+            md:relative md:h-full md:border-t-0 md:border-r md:shadow-none md:z-10 md:rounded-none md:bottom-auto md:left-auto md:right-auto
+          `}
+        >
+          {/* Header indicator bar (Mobile only) */}
+          <div
+            className="flex h-16 shrink-0 cursor-pointer items-center justify-between px-6 border-b border-border/40 md:hidden"
+            onClick={() => setSheetOpen((o) => !o)}
+          >
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-sm">
+                {locating ? "Locating you…" : loading ? "Searching…" : `${results.length} spots nearby`}
+              </span>
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+            </div>
+            <span className="text-xs font-semibold text-primary">
+              {sheetOpen ? "Collapse List" : "Expand List"}
             </span>
-            <div className="flex shrink-0 items-center gap-2">
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          </div>
+
+          {/* Desktop Search Status & My Location Controls */}
+          <div className="hidden md:flex shrink-0 items-center justify-between gap-2 px-5 py-3 border-b border-border/40 bg-background/50 backdrop-blur">
+            <span className="text-sm font-medium text-muted-foreground truncate">
+              {locating ? "Locating you…" : loading ? "Searching…" : `${results.length} spots found`}
+            </span>
+            <div className="flex items-center gap-2">
+              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />}
               <Button size="sm" variant="outline" onClick={() => locate(true)} disabled={locating}>
                 <Crosshair className="mr-1 h-3.5 w-3.5" /> My location
               </Button>
             </div>
           </div>
+
           {geoError && (
-            <div className="flex items-start gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+            <div className="m-3 flex items-start gap-2 rounded-xl border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
               <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" />
               <span className="flex-1">{geoError}</span>
               <button
@@ -229,98 +273,168 @@ function BrowsePage() {
               </button>
             </div>
           )}
-          {results.length === 0 && !loading && (
-            <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border p-8 text-center">
-              <div className="inline-flex rounded-full bg-muted p-3">
-                <SearchX className="h-5 w-5 text-muted-foreground" />
+
+          {/* Scrollable list content */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {scoredResults.length === 0 && !loading && (
+              <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-border p-8 text-center">
+                <div className="inline-flex rounded-full bg-muted p-3">
+                  <SearchX className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium text-foreground">No spots in this area yet</p>
+                <p className="max-w-xs text-xs text-muted-foreground">
+                  Try widening the radius, dropping the price cap, or panning the map to a nearby
+                  area.
+                </p>
               </div>
-              <p className="text-sm font-medium text-foreground">No spots in this area yet</p>
-              <p className="max-w-xs text-xs text-muted-foreground">
-                Try widening the radius, dropping the price cap, or panning the map to a nearby
-                area.
-              </p>
-            </div>
-          )}
-          <ul className="space-y-3">
-            {results.map((s) => (
-              <li
-                key={s.id}
-                className={`overflow-hidden rounded-2xl border bg-card shadow-card transition-all duration-200 hover:-translate-y-0.5 ${
-                  selected === s.id ? "border-primary ring-1 ring-primary" : "border-border"
-                }`}
-              >
-                <button
-                  className="flex w-full gap-3 p-3 text-left"
-                  onClick={() => navigate({ to: "/space/$id", params: { id: s.id } })}
-                  onMouseEnter={() => setSelected(s.id)}
+            )}
+            <ul className="space-y-3 pb-8 md:pb-0">
+              {scoredResults.map((s, index) => (
+                <li
+                  key={s.id}
+                  className={`overflow-hidden rounded-2xl border bg-card shadow-card transition-all duration-200 hover:-translate-y-0.5 ${
+                    selected === s.id ? "border-primary ring-1 ring-primary" : "border-border"
+                  }`}
                 >
-                  <div className="relative h-24 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
-                    {s.photos[0] ? (
-                      <SpacePhoto
-                        path={s.photos[0]}
-                        alt={s.title}
-                        className="h-full w-full object-cover"
-                      />
-                    ) : (
-                      <div className="grid h-full place-items-center text-muted-foreground">
-                        <MapPin className="h-5 w-5" />
-                      </div>
-                    )}
-                    <span
-                      className={`absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium backdrop-blur ${
-                        s.live_occupancy_status === "occupied" ? "text-warning" : "text-success"
-                      }`}
-                    >
+                  <button
+                    className="flex w-full gap-3 p-3 text-left"
+                    onClick={() => navigate({ to: "/space/$id", params: { id: s.id } })}
+                    onMouseEnter={() => setSelected(s.id)}
+                  >
+                    <div className="relative h-24 w-28 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
+                      {s.photos[0] ? (
+                        <SpacePhoto
+                          path={s.photos[0]}
+                          alt={s.title}
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="grid h-full place-items-center text-muted-foreground">
+                          <MapPin className="h-5 w-5" />
+                        </div>
+                      )}
                       <span
-                        className={`h-1 w-1 rounded-full ${s.live_occupancy_status === "occupied" ? "bg-warning" : "bg-success"}`}
-                      />
-                      {s.live_occupancy_status === "occupied" ? "Occupied" : "Available"}
-                    </span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-baseline justify-between gap-2">
-                      <div className="flex min-w-0 items-center gap-1.5">
-                        <div className="truncate font-semibold">{s.title}</div>
-                        {s.is_featured && (
-                          <span className="shrink-0 rounded-full bg-gradient-brand px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary-foreground">
-                            Pro
-                          </span>
-                        )}
-                      </div>
-                      <div className="whitespace-nowrap text-base font-semibold text-primary">
-                        <Price usd={s.price_per_hour} />
-                        <span className="text-xs font-normal text-muted-foreground">/hr</span>
-                      </div>
-                    </div>
-                    <div className="truncate text-xs text-muted-foreground">{s.address}</div>
-                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {s.distance_km.toFixed(1)} km
+                        className={`absolute left-1.5 top-1.5 inline-flex items-center gap-1 rounded-full bg-background/90 px-1.5 py-0.5 text-[10px] font-medium backdrop-blur ${
+                          s.live_occupancy_status === "occupied" ? "text-warning" : "text-success"
+                        }`}
+                      >
+                        <span
+                          className={`h-1 w-1 rounded-full ${s.live_occupancy_status === "occupied" ? "bg-warning" : "bg-success"}`}
+                        />
+                        {s.live_occupancy_status === "occupied" ? "Occupied" : "Available"}
                       </span>
-                      {s.is_covered && <FeatureDot>Covered</FeatureDot>}
-                      {s.is_gated && <FeatureDot>Gated</FeatureDot>}
-                      {s.has_ev_charging && <FeatureDot>EV</FeatureDot>}
                     </div>
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
+                    <div className="min-w-0 flex-1 flex flex-col justify-between py-0.5">
+                      <div>
+                        <div className="flex items-baseline justify-between gap-2">
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            <div className="truncate font-semibold text-sm sm:text-base">{s.title}</div>
+                            {s.is_featured && (
+                              <span className="shrink-0 rounded-full bg-gradient-brand px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary-foreground">
+                                Pro
+                              </span>
+                            )}
+                          </div>
+                          <div className="whitespace-nowrap text-sm sm:text-base font-semibold text-primary shrink-0">
+                            <Price usd={s.price_per_hour} />
+                            <span className="text-[10px] sm:text-xs font-normal text-muted-foreground">/hr</span>
+                          </div>
+                        </div>
+                        <div className="truncate text-xs text-muted-foreground">{s.address}</div>
+                      </div>
+
+                      <div className="mt-1 flex items-center justify-between">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <MapPin className="h-3 w-3" />
+                            {s.distance_km.toFixed(1)} km
+                          </span>
+                          {s.is_covered && <FeatureDot>Covered</FeatureDot>}
+                          {s.is_gated && <FeatureDot>Gated</FeatureDot>}
+                          {s.has_ev_charging && <FeatureDot>EV</FeatureDot>}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[9px] font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0">
+                            Score: {s.score}/100
+                          </span>
+                          {index === 0 && s.score >= 60 && (
+                            <span className="text-[9px] font-extrabold uppercase tracking-wide text-success shrink-0">
+                              Best Match
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
-        <div className="md:sticky md:top-4 md:self-start">
-          <MapFrame height={520} retryKey={mapKey} onRetry={() => setMapKey((k) => k + 1)}>
+        {/* Map Section (Mobile: full background under sheet, Desktop: sticky right column) */}
+        <div className="absolute inset-0 z-0 md:relative md:inset-auto md:z-auto md:h-full">
+          <MapFrame height={550} retryKey={mapKey} onRetry={() => setMapKey((k) => k + 1)}>
             <BrowseMap
               center={center}
               spaces={results}
               selectedId={selected}
-              onSelect={(id) => navigate({ to: "/space/$id", params: { id } })}
+              onSelect={(id) => {
+                setSelected(id);
+                const sp = results.find((r) => r.id === id);
+                if (sp) {
+                  setSelectedSpace(sp);
+                }
+              }}
               onCenterChange={setCenter}
-              height={520}
+              height={550}
             />
           </MapFrame>
         </div>
+
+        {/* Contextual Parking Space Preview Card (Mobile Overlay) */}
+        {selectedSpace && (
+          <div className="absolute bottom-20 left-4 right-4 z-50 md:hidden rounded-2xl border border-border bg-card p-4 shadow-lg flex gap-3 animate-in slide-in-from-bottom duration-250">
+            <div className="h-16 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-muted">
+              {selectedSpace.photos[0] ? (
+                <SpacePhoto
+                  path={selectedSpace.photos[0]}
+                  alt={selectedSpace.title}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="grid h-full place-items-center text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                </div>
+              )}
+            </div>
+            <div className="min-w-0 flex-1 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between">
+                  <h4 className="truncate text-sm font-semibold">{selectedSpace.title}</h4>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-foreground text-xs p-1"
+                    onClick={() => setSelectedSpace(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="truncate text-xs text-muted-foreground">{selectedSpace.address}</p>
+              </div>
+              <div className="flex items-center justify-between mt-1">
+                <span className="text-xs font-semibold text-primary">
+                  <Price usd={selectedSpace.price_per_hour} />/hr
+                </span>
+                <Button asChild size="sm" className="h-7 text-xs px-3">
+                  <Link to="/space/$id" params={{ id: selectedSpace.id }}>
+                    Book Now
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
