@@ -7,11 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { SITE_URL } from "@/lib/site";
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 import { Toaster } from "@/components/ui/sonner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { PerfOverlay } from "@/components/PerfOverlay";
@@ -164,9 +165,15 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const router = useRouter();
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, newSession) => {
+      setSession(newSession);
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
@@ -197,7 +204,7 @@ function RootComponent() {
         <div className="flex-1">
           <Outlet />
         </div>
-        <SiteFooter />
+        {!session && <SiteFooter />}
       </div>
       <Toaster richColors position="top-center" />
       <PerfOverlay />
